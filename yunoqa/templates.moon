@@ -58,13 +58,13 @@ header = (suite, results) -> render_html ->
 				div class: "navbar-end", ->
 					status = "ok" -- FIXME XXX
 					okCount = 0
-					for environment in *suite.resultsPerEnvironment
+					for environment in *suite.environments
 						latestTest = environment[1]
 
 						if latestTest.summary["not ok"] == 0
 							okCount += 1
 
-					maxCount = #suite.resultsPerEnvironment
+					maxCount = #suite.environments
 
 					successRatio = okCount / maxCount
 
@@ -83,20 +83,20 @@ header = (suite, results) -> render_html ->
 						span class: {"tag", "is-dark", "is-medium"}, ->
 							text description
 
-_M.singleResultsPage = (results, suite) ->
+_M.singleResultsPage = (results, project) ->
 	s = headers!
 
 	s ..= render_html ->
 		html xmlns: "http://www.w3.org/1999/xhtml", "xml:lang": "en", lang:"en", ->
 			head ->
 			body ->
-				raw header suite, results
+				raw header project, results
 
 				div class: "section hero is-light is-small", ->
 					div class: "container", ->
 						div class: "columns is-centered", ->
 							div class: "column is-half", ->
-								h3 class: "title is-1", suite.project
+								h3 class: "title is-1", project.name
 				br!
 				div class: "container", ->
 					div class: "columns is-centered", ->
@@ -158,7 +158,7 @@ _M.projectResultsPage = (project) ->
 						div class: "column is-half", ->
 							h3 class: "title is-3", "Per-environment summary"
 							ul ->
-								for environment in *project.resultsPerEnvironment
+								for environment in *project.environments
 									li class: "columns", ->
 										div class: "column",
 											environment.name
@@ -172,10 +172,10 @@ _M.projectResultsPage = (project) ->
 
 							h3 class: "title is-3", "Latest results registered"
 							ul ->
-								for index, results in ipairs project
+								for index, results in ipairs project.results
 									environment = do
 										_R = nil
-										for env in *project.resultsPerEnvironment
+										for env in *project.environments
 											if env.name == results.environmentName
 												_R = env
 												break
@@ -229,11 +229,11 @@ _M.indexPage = (configuration) ->
 					div class: "columns is-centered", ->
 						div class: "column is-half", ->
 							ul ->
-								for suite in *configuration.unit
+								for project in *configuration.projects
 									total = 0
 									notOk = 0
 
-									for environment in *suite.resultsPerEnvironment
+									for environment in *project.environments
 										latestTest = environment[1]
 
 										total += 1
@@ -244,7 +244,7 @@ _M.indexPage = (configuration) ->
 									li class: "media", ->
 										div class: "media-content", ->
 											span class: "title is-4", ->
-												a href: "#{suite.project}.xhtml", suite.project
+												a href: "#{project.project}.xhtml", project.project
 
 										styleClass, comment = if notOk == 0
 											"is-success", "ok"
