@@ -40,11 +40,13 @@ for project in *configuration.projects
 	for results in *project.results
 		print "results:", results.revisionName
 
-		--require("pl.pretty").dump results
-		outputFileName = "output/#{project.name}-#{results.environmentName}-#{results.revisionName}.xhtml"
+		outputFileName = "output/#{project.name}-#{results.date\gsub ":", "-"}-#{results.environmentName}-#{results.revisionName}.xhtml"
 		print "output: ", (outputFileName\gsub "%s", "%%20")
 
-		outputFile = io.open outputFileName, "w"
+		outputFile, reason = io.open outputFileName, "w"
+		unless outputFile
+			io.stderr\write "#{reason}\n"
+			continue
 		outputFile\write templates.singleResultsPage results, project
 		outputFile\close!
 

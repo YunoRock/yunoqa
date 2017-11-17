@@ -15,7 +15,7 @@ class
 	@@from_filename = (fileName) ->
 		self = @@!
 
-		date, environmentName, revisionName = fileName\match "/(.*)#(.*)#(.*)%.tap$"
+		date, environmentName, revisionName = fileName\match "/([^/]*)#(.*)#(.*)%.tap$"
 
 		file, reason = io.open fileName, "r"
 

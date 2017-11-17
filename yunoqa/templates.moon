@@ -49,7 +49,7 @@ header = (suite, results) -> render_html ->
 				suite.project
 
 			if results
-				a class: "navbar-item", href: "#{suite.project}-#{results.environmentName}-#{results.revisionName}.xhtml",
+				a class: "navbar-item", href: "#{suite.project}-#{results.date\gsub ":", "-"}-#{results.environmentName}-#{results.revisionName}.xhtml",
 					results.revisionName
 
 				div class: "navbar-end", ->
@@ -194,7 +194,7 @@ _M.projectResultsPage = (project) ->
 												span class: "tag is-medium is-success", "success"
 
 										div class: "column is-fullwidth", ->
-											a href: "#{project.project}-#{results.environmentName}-#{results.revisionName}.xhtml", ->
+											a href: "#{project.project}-#{results.date\gsub ":", "-"}-#{results.environmentName}-#{results.revisionName}.xhtml", ->
 												div class: "title is-6", ->
 													code results.revisionName
 												div class: "subtitle is-5", ->
