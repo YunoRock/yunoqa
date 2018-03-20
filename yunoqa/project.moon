@@ -53,5 +53,5 @@ class
 			_T
 
 	__tostring: =>
-		"<yunoqa.Project>"
+		"<yunoqa.Project: '#{@name}'>"
 
