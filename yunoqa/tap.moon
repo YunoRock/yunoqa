@@ -28,6 +28,79 @@ parseDirective = (str) ->
 
 	return type, comment
 
+parseTests = (tests, line, state, count) ->
+	if line\match "^# "
+		line = line\gsub "^# *", ""
+
+		if state == "preTests"
+			if tests.heading
+				tests.heading ..= "\n" .. line
+			else
+				tests.heading = line
+		else
+			print "??? 1 #{line}"
+	elseif line\match("^ok ") or line\match("^not ok ")
+		state = "tests"
+
+		count += 1
+
+		status = if line\match("^ok ")
+			"ok"
+		else
+			"not ok"
+
+		number, description, directive = line\match "#{status} ([0-9]+) *(.*) *# (.*)"
+
+		unless number
+			number, description = line\match "ok ([0-9]+) *(.*)"
+
+		number = tonumber number
+
+		description = description\gsub "^ *", ""
+		description = description\gsub " *$", ""
+		description = description\gsub "^ *%- *", ""
+
+		if directive
+			directive = directive\gsub "^ *", ""
+			directive = directive\gsub " *$", ""
+
+			if directive == ""
+				directive = nil
+
+			directive = directive\lower!
+
+		directive, comment = if directive
+			parseDirective directive
+
+		if directive
+			-- Pending tests are considered successes.
+			-- "However, because the failing tests are marked as things to do later, they are considered successes. Thus, a harness should report this entire listing as a success."
+			status = "ok"
+
+		table.insert tests, {
+			:status, :directive, :number
+			:description, :comment
+		}
+
+		tests.summary[directive or status] += 1
+	elseif line\match "^[0-9]+%.%.[0-9]+$"
+		state = "postTests"
+		one, max = line\match "^([0-9]+)%.%.([0-9]+)$"
+
+		max = tonumber max
+
+		-- FIXME: Proper error reporting. :(
+		if max != count
+			print "OH NOES"
+	elseif line\match "^  %-%-%-"
+		state = "inYAML"
+	elseif line\match "^%s*$"
+		true -- Ignoring whitespace, empty line.
+	else
+		io.stderr\write "??? 2 #{line}\n"
+
+	state, count
+
 _M.parse = (tap) ->
 	state = "preSuite"
 	count = 0
@@ -46,81 +119,15 @@ _M.parse = (tap) ->
 			when "preSuite"
 				version = line\match "TAP version ([0-9]+)"
 				unless version
+					state = "preTests"
+					state, count = parseTests tests, line, state, count
 					continue
 
 				version = tonumber version
 
 				state = "preTests"
 			when "preTests", "tests"
-				if line\match "^# "
-					line = line\gsub "^# *", ""
-
-					if state == "preTests"
-						if tests.heading
-							tests.heading ..= "\n" .. line
-						else
-							tests.heading = line
-					else
-						print "??? 1 #{line}"
-				elseif line\match("^ok ") or line\match("^not ok ")
-					state = "tests"
-
-					count += 1
-
-					status = if line\match("^ok ")
-						"ok"
-					else
-						"not ok"
-
-					number, description, directive = line\match "#{status} ([0-9]+) *(.*) *# (.*)"
-
-					unless number
-						number, description = line\match "ok ([0-9]+) *(.*)"
-
-					number = tonumber number
-
-					description = description\gsub "^ *", ""
-					description = description\gsub " *$", ""
-					description = description\gsub "^ *%- *", ""
-
-					if directive
-						directive = directive\gsub "^ *", ""
-						directive = directive\gsub " *$", ""
-
-						if directive == ""
-							directive = nil
-
-						directive = directive\lower!
-
-					directive, comment = if directive
-						parseDirective directive
-
-					if directive
-						-- Pending tests are considered successes.
-						-- "However, because the failing tests are marked as things to do later, they are considered successes. Thus, a harness should report this entire listing as a success."
-						status = "ok"
-
-					table.insert tests, {
-						:status, :directive, :number
-						:description, :comment
-					}
-
-					tests.summary[directive or status] += 1
-				elseif line\match "^[0-9]+%.%.[0-9]+$"
-					state = "postTests"
-					one, max = line\match "^([0-9]+)%.%.([0-9]+)$"
-
-					max = tonumber max
-
-					-- FIXME: Proper error reporting. :(
-					if max != count
-						print "OH NOES"
-				elseif line\match "^  %-%-%-"
-					state = "inYAML"
-				elseif line\match "^%s*$"
-					true -- Ignoring whitespace, empty line.
-				else
-					io.stderr\write "??? 2 #{line}\n"
+				state, count = parseTests tests, line, state, count
 			when "inYAML"
 				if line\match "^  "
 					if line\match "^  %.%.%."
