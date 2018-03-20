@@ -6,6 +6,7 @@ toml = require "toml"
 
 tap = require "yunoqa.tap"
 templates = require "yunoqa.templates"
+{:mkdir_p} = require "yunoqa.utils"
 
 TestResults = require "yunoqa.tests_results"
 Project = require "yunoqa.project"
@@ -31,6 +32,15 @@ configuration = do
 	with Configuration toml.parse content
 		\importResults!
 
+cliParser = with argparse arg[0], "Aggregate test results."
+	\option "-o --output", "Output directory", "output/"
+
+args = cliParser\parse!
+
+outputDirectory = args.output
+
+mkdir_p args.output
+
 -- FIXME: Alternate output (ie. plain text, vt100, etc.).
 for project in *configuration.projects
 	print "project:", project.name
@@ -40,7 +50,7 @@ for project in *configuration.projects
 	for results in *project.results
 		print "results:", results.revisionName
 
-		outputFileName = "output/#{project.name}-#{results.date\gsub ":", "-"}-#{results.environmentName}-#{results.revisionName}.xhtml"
+		outputFileName = "#{outputDirectory}/#{project.name}-#{results.date\gsub ":", "-"}-#{results.environmentName}-#{results.revisionName}.xhtml"
 		print "output: ", (outputFileName\gsub "%s", "%%20")
 
 		outputFile, reason = io.open outputFileName, "w"
@@ -50,18 +60,17 @@ for project in *configuration.projects
 		outputFile\write templates.singleResultsPage results, project
 		outputFile\close!
 
-	outputFileName = "output/#{project.name}.xhtml"
+	outputFileName = "#{outputDirectory}/#{project.name}.xhtml"
 	print "output: ", (outputFileName\gsub "%s", "%%20")
 
 	outputFile = io.open outputFileName, "w"
 	outputFile\write templates.projectResultsPage project
 	outputFile\close!
 
-outputFileName = "output/index.xhtml"
+outputFileName = "#{outputDirectory}/index.xhtml"
 print "output: ", (outputFileName\gsub "%s", "%%20")
 
 outputFile = io.open outputFileName, "w"
 outputFile\write templates.indexPage configuration
 outputFile\close!
-
 
