@@ -29,8 +29,7 @@ Configuration = class
 configuration = do
 	configFile = io.open "qa.toml", "r"
 	content = configFile\read "*all"
-	with Configuration toml.parse content
-		\importResults!
+	Configuration toml.parse content
 
 cliParser = with argparse arg[0], "Test results aggregator."
 	\command "show"
@@ -63,9 +62,13 @@ if args.add
 	directoryName = "#{configuration.resultsDirectory}/#{project.name}"
 	mkdir_p directoryName
 
-	file = io.open "#{directoryName}/#{project.name}##{args.environment}##{args.revision}.tap", "w"
+	dateProcess = io.popen "date -Iseconds"
+	date = dateProcess\read "*line"
+	dateProcess\close!
+
+	file = io.open "#{directoryName}/#{date}##{args.environment}##{args.revision}.tap", "w"
 	for line in io.stdin\lines!
-		file\write line
+		file\write line, "\n"
 	file\close!
 elseif args.show
 	for project in *configuration.projects
@@ -76,6 +79,8 @@ elseif args.html
 	outputDirectory = args.output
 
 	mkdir_p outputDirectory
+
+	configuration\importResults!
 
 	-- FIXME: Alternate output (ie. plain text, vt100, etc.).
 	for project in *configuration.projects
