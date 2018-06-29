@@ -32,7 +32,7 @@ configuration = do
 	Configuration toml.parse content
 
 cliParser = with argparse arg[0], "Test results aggregator."
-	\command "show"
+	\command "show", "List the registered projects and test results."
 
 	with \command "html", "Generates a set of HTML pages."
 		\option "-o --output", "Output directory", "output/"
