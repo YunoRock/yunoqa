@@ -30,6 +30,10 @@ class
 		for result in *tapTests
 			table.insert @, Test result
 
+			-- FIXME: .yaml??? D:
+			if result.yaml and result.yaml.duration
+				@duration = (@duration or 0) + result.yaml.duration
+
 		@summary = tapTests.summary
 
 		@date = date

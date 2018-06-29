@@ -97,6 +97,51 @@ _M.singleResultsPage = (results, project) ->
 						div class: "columns is-centered", ->
 							div class: "column is-half", ->
 								h3 class: "title is-1", project.name
+				div class: "section hero is-dark is-bold is-small", ->
+					div class: "container", ->
+						div class: "columns is-centered", ->
+							div class: "column is-3-12"
+							div class: "column", ->
+								div class: "notification is-primary", ->
+									div class: "title is-4 has-text-centered", "Duration"
+									div class: "title is-5 has-text-centered", ->
+										if results.duration
+											text string.format("%.3f", results.duration * 1000)
+											text " ms"
+										else
+											text "unknown"
+							div class: "column", ->
+								div class: "notification is-primary", ->
+									div class: "title is-4 has-text-centered", "Tests"
+									div class: "title is-5 has-text-centered", tostring #results
+
+							statusString, colorClass = if results.summary["not ok"] == 0
+								"all passed", "is-success"
+							else
+								"errors", "is-danger"
+
+							div class: "column", ->
+								div class: "notification #{colorClass}", ->
+									div class: "title is-4 has-text-centered", "Status"
+									div class: "title is-5 has-text-centered", statusString
+							div class: "column", ->
+								all = results.summary.ok + results.summary["not ok"]
+								rate = 100 * results.summary.ok / all
+
+								colorClass = if rate < 30
+									"is-danger"
+								elseif rate < 100
+									"is-warning"
+								else
+									"is-success"
+
+								div class: "notification #{colorClass}", ->
+									div class: "title is-4 has-text-centered", "Success rate"
+									div class: "title is-5 has-text-centered", ->
+
+										text string.format "%.1f", rate
+										text " %"
+							div class: "column is-3-12"
 				br!
 				div class: "container", ->
 					div class: "columns is-centered", ->
