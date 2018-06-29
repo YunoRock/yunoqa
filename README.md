@@ -38,7 +38,7 @@ The software is at this stage very much a work in progress.
 Many features are sketchy, or simply missing.
 This includes:
 
-- Templates should be redifinable (possibly per-project).
+- Templates should be redefinable (possibly per-project).
 - A CLI should be provided to receive TAP results through UNIX pipes.
 - The stylesheet and current templates are to be cleaned, a lot.
 - Documentation, examples and manpages.
