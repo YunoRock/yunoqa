@@ -32,7 +32,9 @@ configuration = do
 	Configuration toml.parse content
 
 cliParser = with argparse arg[0], "Test results aggregator."
-	\command "show", "List the registered projects and test results."
+	with \command "show", "List the registered projects and test results."
+		with \option "-p --project", "Filter shown results by project."
+			\count "0-1"
 
 	with \command "html", "Generates a set of HTML pages."
 		\option "-o --output", "Output directory", "output/"
@@ -71,10 +73,18 @@ if args.add
 		file\write line, "\n"
 	file\close!
 elseif args.show
-	for project in *configuration.projects
-		print "project:", project.name
+	configuration\importResults!
+
+	projects = configuration.projects
+
+	if args.project
+		projects = [project for project in *projects when project.name == args.project]
+
+	for project in *projects
 		for results in *project.results
-			print "results:", results.revisionName
+			io.write project.name, "\t",
+				results.revisionName, "\t",
+				results.environmentName, "\n"
 elseif args.html
 	outputDirectory = args.output
 

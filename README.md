@@ -39,7 +39,6 @@ Many features are sketchy, or simply missing.
 This includes:
 
 - Templates should be redefinable (possibly per-project).
-- A CLI should be provided to receive TAP results through UNIX pipes.
 - The stylesheet and current templates are to be cleaned, a lot.
 - Documentation, examples and manpages.
 
