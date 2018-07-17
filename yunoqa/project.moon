@@ -25,7 +25,14 @@ class
 			if not entry\match "%.tap$"
 				continue
 
-			results = TestsResults.from_filename "#{configuration.resultsDirectory}/#{@name}/#{entry}"
+			success, results = pcall ->
+				TestsResults.from_filename "#{configuration.resultsDirectory}/#{@name}/#{entry}"
+
+			unless success
+				io.stderr\write "!! loading '#{@name}/#{entry}' failed\n"
+				io.stderr\write "!! ... reason: #{results}\n"
+				continue
+
 			table.insert @results, results
 
 		table.sort @results, (a, b) ->

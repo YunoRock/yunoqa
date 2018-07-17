@@ -17,6 +17,9 @@ class
 
 		date, environmentName, revisionName = fileName\match "/([^/]*)#(.*)#(.*)%.tap$"
 
+		unless date and environmentName and revisionName
+			error "Could not extract metadata from file name.", 0
+
 		file, reason = io.open fileName, "r"
 
 		unless file
