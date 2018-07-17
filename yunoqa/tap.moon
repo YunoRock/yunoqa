@@ -13,6 +13,16 @@ _M = {}
 --   - Proper syntax errors.
 ---
 
+TAPInvalidCount = class
+	new: (max, count) =>
+		@max = max
+		@count = count
+		@type = "TAPInvalidCount"
+		@message = "number of tests does not match header or footer"
+
+	__tostring: =>
+		"#{@message}: max=#{@max}, count=#{@count}"
+
 parseDirective = (str) ->
 	type, comment = str\match "^([a-zA-Z]*)(.*)"
 
@@ -29,10 +39,12 @@ parseDirective = (str) ->
 	return type, comment
 
 parseTests = (tests, line, state, count) ->
-	if line\match "^# "
-		line = line\gsub "^# *", ""
+	local max
 
+	if line\match "^# "
 		if state == "preTests"
+			line = line\gsub "^# *", ""
+
 			if tests.heading
 				tests.heading ..= "\n" .. line
 			else
@@ -84,14 +96,14 @@ parseTests = (tests, line, state, count) ->
 
 		tests.summary[directive or status] += 1
 	elseif line\match "^[0-9]+%.%.[0-9]+$"
-		state = "postTests"
-		one, max = line\match "^([0-9]+)%.%.([0-9]+)$"
+		one, newMax = line\match "^([0-9]+)%.%.([0-9]+)$"
 
-		max = tonumber max
+		newMax = tonumber newMax
 
-		-- FIXME: Proper error reporting. :(
-		if max != count
-			print "OH NOES"
+		max = newMax
+
+		unless state == "preTests"
+			state = "postTests"
 	elseif line\match "^  %-%-%-"
 		state = "inYAML"
 	elseif line\match "^%s*$"
@@ -99,11 +111,12 @@ parseTests = (tests, line, state, count) ->
 	else
 		io.stderr\write "??? 2 #{line}\n"
 
-	state, count
+	state, count, max
 
 _M.parse = (tap) ->
 	state = "preSuite"
 	count = 0
+	max = 0
 
 	tests = {
 		summary: {
@@ -120,14 +133,16 @@ _M.parse = (tap) ->
 				version = line\match "TAP version ([0-9]+)"
 				unless version
 					state = "preTests"
-					state, count = parseTests tests, line, state, count
+					state, count, newMax = parseTests tests, line, state, count
+					max = newMax if newMax
 					continue
 
 				version = tonumber version
 
 				state = "preTests"
 			when "preTests", "tests"
-				state, count = parseTests tests, line, state, count
+				state, count, newMax = parseTests tests, line, state, count
+				max = newMax if newMax
 			when "inYAML"
 				if line\match "^  "
 					if line\match "^  %.%.%."
@@ -158,6 +173,9 @@ _M.parse = (tap) ->
 						tests.footer = line
 			else
 				io.stderr\write "??? 4 #{line}\n"
+
+	if max != count
+		error (TAPInvalidCount max, count), 0
 
 	tests
 
