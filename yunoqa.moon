@@ -11,6 +11,25 @@ templates = require "yunoqa.templates"
 TestResults = require "yunoqa.tests_results"
 Project = require "yunoqa.project"
 
+vt100color = (code) ->
+	(...) ->
+		"\027[#{code}m" .. table.concat({...}) .. "\027[00m"
+colors = {
+	red:   vt100color 31
+	green: vt100color 32
+	yellow:vt100color 33
+	cyan:  vt100color 36
+	white: vt100color 37
+}
+
+bright_colors = {}
+for color, func in pairs colors
+	bright_colors["bright_" .. color] = (...) ->
+		"\027[01m" .. func ...
+
+for color, func in pairs bright_colors
+	colors[color] = func
+
 Configuration = class
 	---
 	-- Designed to take a parsed TOML file as input.
@@ -82,9 +101,19 @@ elseif args.show
 
 	for project in *projects
 		for results in *project.results
-			io.write project.name, "\t",
-				results.revisionName, "\t",
-				results.environmentName, "\n"
+			io.write colors.bright_white "#{project.name}, ",
+				"rev:#{results.revisionName}, ",
+				"env:#{results.environmentName}, ",
+				"#{results.date}\n"
+
+			io.write colors.bright_green "#{results.summary.ok} ok"
+			io.write " - "
+			io.write colors.bright_red "#{results.summary["not ok"]} not ok"
+			io.write " - "
+			io.write colors.bright_yellow "#{results.summary["skip"]} not ok"
+			io.write " - "
+			io.write colors.bright_cyan "#{results.summary["todo"]} not ok"
+			io.write "\n"
 elseif args.html
 	outputDirectory = args.output
 
