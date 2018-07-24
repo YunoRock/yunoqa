@@ -36,7 +36,16 @@ class
 			table.insert @results, results
 
 		table.sort @results, (a, b) ->
-			a.date > b.date
+			aDate = [tonumber m for m in a.date\gmatch "[0-9]+"]
+			bDate = [tonumber m for m in b.date\gmatch "[0-9]+"]
+	
+			for i = 1, #aDate
+				if aDate[i] > bDate[i]
+					return true
+				elseif aDate[i] < bDate[i]
+					return false
+
+			false
 
 		@environments = do
 			_T = {}
