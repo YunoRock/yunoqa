@@ -38,6 +38,8 @@ Configuration = class
 
 		@projects = [Project project for project in *(arg.project or {})]
 
+		@title = arg.title or "YunoRock Quality Assurance"
+
 	importResults: =>
 		for project in *@projects
 			project\importResults self
@@ -121,36 +123,34 @@ elseif args.html
 
 	configuration\importResults!
 
+	writeTemplate = (template, fileName, ...) ->
+		print "output: ", (fileName\gsub "%s", "%%20")
+		file, reason = io.open fileName, "w"
+
+		unless file
+			io.stderr\write "#{reason}\n"
+			return
+
+		file\write template ...
+		file\close!
+
 	-- FIXME: Alternate output (ie. plain text, vt100, etc.).
 	for project in *configuration.projects
 		print "project:", project.name
 
 		resultsList = project.results
 
+		resultsPageTemplate = project.template or templates.singleResultsPage
+
 		for results in *project.results
 			print "results:", results.revisionName
 
 			outputFileName = "#{outputDirectory}/#{project.name}-#{results.date\gsub ":", "-"}-#{results.environmentName}-#{results.revisionName}.xhtml"
-			print "output: ", (outputFileName\gsub "%s", "%%20")
-
-			outputFile, reason = io.open outputFileName, "w"
-			unless outputFile
-				io.stderr\write "#{reason}\n"
-				continue
-			outputFile\write templates.singleResultsPage results, project
-			outputFile\close!
+			writeTemplate resultsPageTemplate, outputFileName, configuration, results, project
 
 		outputFileName = "#{outputDirectory}/#{project.name}.xhtml"
-		print "output: ", (outputFileName\gsub "%s", "%%20")
-
-		outputFile = io.open outputFileName, "w"
-		outputFile\write templates.projectResultsPage project
-		outputFile\close!
+		writeTemplate templates.projectResultsPage, outputFileName, configuration, project
 
 	outputFileName = "#{outputDirectory}/index.xhtml"
-	print "output: ", (outputFileName\gsub "%s", "%%20")
-
-	outputFile = io.open outputFileName, "w"
-	outputFile\write templates.indexPage configuration
-	outputFile\close!
+	writeTemplate templates.indexPage, outputFileName, configuration
 

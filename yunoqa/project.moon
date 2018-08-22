@@ -1,5 +1,6 @@
 
 lfs = require "lfs"
+moonscript = require "moonscript"
 
 tap = require "yunoqa.tap"
 
@@ -15,6 +16,9 @@ class
 
 		@results = {}
 		@environments = {}
+
+		@template = if arg.template
+			moonscript.loadfile(arg.template)!
 
 	importResults: (configuration) =>
 		for entry in lfs.dir "#{configuration.resultsDirectory}/#{@name}"
