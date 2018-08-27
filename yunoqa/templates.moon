@@ -98,7 +98,7 @@ _M.basePage = (configuration, opt, content) ->
 				div class: "section hero is-light is-small", ->
 					div class: "container", ->
 						div class: "columns is-centered", ->
-							div class: "column is-half", ->
+							div class: "column is-8", ->
 								h3 class: "title is-1", tostring configuration.title
 				br!
 				div class: "container", ->
@@ -121,8 +121,9 @@ _M.testsList = (results) -> render_html ->
 						"is-warning"
 
 				div class: "media-left", ->
-					span class: "tag is-medium is-dark", test.number
-					span class: {statusStyle, "tag", "is-medium"}, status
+					span class: "tags has-addons", ->
+						span class: "tag is-medium is-dark", test.number
+						span class: {statusStyle, "tag", "is-medium"}, status
 				div class: "media-content", ->
 					span test.description
 
@@ -139,55 +140,58 @@ _M.testsList = (results) -> render_html ->
 
 _M.singleResultsPage = (configuration, results, project) ->
 	_M.basePage configuration, {project: project, suite: results}, ->
-		div class: "section hero is-dark is-bold is-small", ->
+		div class: "section hero is-bold is-small", ->
 			div class: "container", ->
-				div class: "columns is-centered", ->
-					div class: "column is-3-12"
-					div class: "column", ->
-						div class: "notification is-primary", ->
-							div class: "title is-4 has-text-centered", "Duration"
-							div class: "title is-5 has-text-centered", ->
+				colorClass = if results.summary["not ok"] == 0
+					""
+				else
+					"is-warning"
+
+				div class: "message #{colorClass}", ->
+					div class: "message-body", ->
+						div class: "tags has-addons", ->
+							div class: "tag is-big is-primary", "Duration"
+							div class: "tag is-big is-info", ->
 								if results.duration
 									text string.format("%.3f", results.duration * 1000)
 									text " ms"
 								else
 									text "unknown"
-					div class: "column", ->
-						div class: "notification is-primary", ->
-							div class: "title is-4 has-text-centered", "Tests"
-							div class: "title is-5 has-text-centered", tostring #results
 
-					statusString, colorClass = if results.summary["not ok"] == 0
-						"all passed", "is-success"
-					else
-						"errors", "is-danger"
+						div class: "tags has-addons", ->
+							div class: "tag is-big is-primary", "Tests"
+							div class: "tag is-big is-info",  tostring #results
 
-					div class: "column", ->
-						div class: "notification #{colorClass}", ->
-							div class: "title is-4 has-text-centered", "Status"
-							div class: "title is-5 has-text-centered", statusString
-					div class: "column", ->
-						all = results.summary.ok + results.summary["not ok"]
-						rate = 100 * results.summary.ok / all
+						div class: "tags has-addons", ->
+							statusString, colorClass = if results.summary["not ok"] == 0
+								"all passed", "is-success"
+							else
+								"errors", "is-danger"
 
-						colorClass = if rate < 30
-							"is-danger"
-						elseif rate < 100
-							"is-warning"
-						else
-							"is-success"
+							div class: "tag is-big is-primary", "Status"
+							div class: "tag is-big #{colorClass}", statusString
 
-						div class: "notification #{colorClass}", ->
-							div class: "title is-4 has-text-centered", "Success rate"
-							div class: "title is-5 has-text-centered", ->
+						div class: "tags has-addons", ->
+							all = results.summary.ok + results.summary["not ok"]
+							rate = 100 * results.summary.ok / all
 
+							colorClass = if rate < 30
+								"is-danger"
+							elseif rate < 99
+								"is-warning"
+							else
+								"is-success"
+
+							div class: "tag is-big is-primary", ->
+								text "Success rate"
+
+							div class: "tag is-big #{colorClass}", ->
 								text string.format "%.1f", rate
 								text " %"
-					div class: "column is-3-12"
 		br!
 		div class: "container", ->
 			div class: "columns is-centered", ->
-				div class: "column is-half", ->
+				div class: "column is-8", ->
 					if results.heading
 						h3 class: "title is-3", results.heading
 					raw _M.testsList results
@@ -197,7 +201,7 @@ _M.singleResultsPage = (configuration, results, project) ->
 _M.projectResultsPage = (configuration, project) ->
 	_M.basePage configuration, project: project, ->
 		div class: "columns is-centered", ->
-			div class: "column is-half", ->
+			div class: "column is-8", ->
 				h3 class: "title is-3", "Per-environment summary"
 				ul ->
 					for environment in *project.environments
@@ -223,38 +227,37 @@ _M.projectResultsPage = (configuration, project) ->
 									break
 							_R
 
-						-- FIXME: inline style
-						style = if results == environment[1]
-							"background-color: #BBB;"
+						li class: "media", ->
+							div class: "media-content", ->
+								div class: {"columns"}, ->
+									div class: "column is-narrow", ->
+										if results.summary["not ok"] > 0
+											span class: "tag is-medium is-danger", "✗"
+										else
+											span class: "tag is-medium is-success", "✓"
 
-						li class: {"columns"}, style: style, ->
-							-- FIXME: inline CSS
-							div class: "column is-2", style: "width: 12.5%;", ->
-								if results.summary["not ok"] > 0
-									span class: "tag is-medium is-danger", "failed"
-								else
-									span class: "tag is-medium is-success", "success"
+									div class: "column is-fullwidth", ->
+										a href: "#{project.project}-#{results.date\gsub ":", "-"}-#{results.environmentName}-#{results.revisionName}.xhtml", ->
+											div class: {"title", "is-5"}, ->
+												code results.revisionName
+												text " - "
+												code results.environmentName
+												if results == environment[1]
+													text " - "
+													span class: "tag is-info", "Latest"
+											div class: "subtitle is-5", ->
+												text results.date
 
-							div class: "column is-fullwidth", ->
-								a href: "#{project.project}-#{results.date\gsub ":", "-"}-#{results.environmentName}-#{results.revisionName}.xhtml", ->
-									div class: "title is-6", ->
-										code results.revisionName
-									div class: "subtitle is-5", ->
-										text results.environmentName
-										text " - "
-										text results.date
-
-							div class: "column is-3", ->
-								span class: "tag is-medium is-success", results.summary["ok"]
-								span class: "tag is-medium is-danger", results.summary["not ok"]
-								br!
-								span class: "tag is-medium is-primary", results.summary["skip"]
-								span class: "tag is-medium is-warning", results.summary["todo"]
+									div class: "column is-4", ->
+										span class: "tag is-medium is-success", results.summary["ok"]
+										span class: "tag is-medium is-danger", results.summary["not ok"]
+										span class: "tag is-medium is-primary", results.summary["skip"]
+										span class: "tag is-medium is-warning", results.summary["todo"]
 
 _M.indexPage = (configuration) ->
 	_M.basePage configuration, ->
 		div class: "columns is-centered", ->
-			div class: "column is-half", ->
+			div class: "column is-8", ->
 				ul ->
 					for project in *configuration.projects
 						total = 0
