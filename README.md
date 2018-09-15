@@ -9,8 +9,9 @@ It is meant to be the cornerstone of a future QA and CI system for YunoRock.
 This software depends on:
 
 - Moonscript
-- the Lapis web framework (for the HTML DSL only)
+- the Lapis web framework (for the HTML DSL only, this might be replaced in the future)
 - lua-toml (to read its configuration file)
+- lyaml (to parse YAML blocks within TAP files)
 
 yunoqa’s Makefiles are generated using [build.zsh](https://github.com/Lukc/build.zsh).
 
