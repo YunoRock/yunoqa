@@ -49,6 +49,23 @@ Configuration = class
 	__tostring: =>
 		"<yunoqa.Configuration>"
 
+cliParser = with argparse arg[0], "Test results aggregator."
+	with \command "show", "List the registered projects and test results."
+		with \option "-p --project", "Filter shown results by project."
+			\count "0-1"
+
+	with \command "html", "Generates a set of HTML pages."
+		\option "-o --output", "Output directory", "output"
+
+	with \command "add", "Registers a new set of test results to a given project."
+		\argument "project", "Name of the project whose tests were run."
+		\argument "environment", "Name of the environment in which the tests were run."
+		\argument "revision", "Revision of the project whose tests were run."
+
+args = cliParser\parse!
+
+-- Configuration has to be imported after cliParser\parse!, so that --help
+-- and similar commands take priority.
 configuration = do
 	configuration_args = {projects: {}}
 	project_builder = =>
@@ -75,21 +92,6 @@ configuration = do
 	chunk!
 
 	Configuration configuration_args
-
-cliParser = with argparse arg[0], "Test results aggregator."
-	with \command "show", "List the registered projects and test results."
-		with \option "-p --project", "Filter shown results by project."
-			\count "0-1"
-
-	with \command "html", "Generates a set of HTML pages."
-		\option "-o --output", "Output directory", "output"
-
-	with \command "add", "Registers a new set of test results to a given project."
-		\argument "project", "Name of the project whose tests were run."
-		\argument "environment", "Name of the environment in which the tests were run."
-		\argument "revision", "Revision of the project whose tests were run."
-
-args = cliParser\parse!
 
 if args.add
 	local project
