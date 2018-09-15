@@ -5,7 +5,7 @@ _M = {}
 
 headers = ->
 	s = ""
-	s ..= '<?xml-stylesheet href="style.css">\n'
+	s ..= '<?xml-stylesheet href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.1/css/bulma.min.css">\n'
 	s ..= '<?xml version="1.0" encoding="utf-8"?>\n'
 	s
 
