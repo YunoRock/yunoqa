@@ -21,14 +21,16 @@ Many standard installation paths can be redefined from the CLI; use `make help` 
 
 ## Usage
 
-```
-$ cat qa.toml
+```moon
+$ cat qa.conf
 
-[[project]]
-name = "foo"
+General
+	title: "Test QA Interface"
+	resultsDirectory: "tap"
 
-$ ls foo
-foo#environment-name#revision-number-or-name.tap
+Project "foo",
+	template: -> h1 "My custom template goes here!"
+
 ```
 
 A more user-friendly (and less error-prone) CLI will be done in the near future (if all goes well).

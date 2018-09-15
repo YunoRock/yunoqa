@@ -1,8 +1,10 @@
 #!/usr/bin/env moon
 
+moonscript = require "moonscript"
+{:setfenv} = require "moonscript.util"
+
 argparse = require "argparse"
 lfs = require "lfs"
-toml = require "toml"
 
 tap = require "yunoqa.tap"
 templates = require "yunoqa.templates"
@@ -34,9 +36,9 @@ Configuration = class
 	---
 	-- Designed to take a parsed TOML file as input.
 	new: (arg) =>
-		@resultsDirectory = arg["results-directory"] or "."
+		@resultsDirectory = arg.resultsDirectory or "."
 
-		@projects = [Project project for project in *(arg.project or {})]
+		@projects = arg.projects or {}
 
 		@title = arg.title or "YunoRock Quality Assurance"
 
@@ -48,9 +50,31 @@ Configuration = class
 		"<yunoqa.Configuration>"
 
 configuration = do
-	configFile = io.open "qa.toml", "r"
-	content = configFile\read "*all"
-	Configuration toml.parse content
+	configuration_args = {projects: {}}
+	project_builder = =>
+		table.insert configuration_args.projects, @
+
+	-- FIXME: Proper, user-readable error?
+	chunk = assert moonscript.loadfile "qa.conf"
+
+	configuration_environment = {
+		Project: (name, arg) ->
+			arg or= {}
+
+			table.insert configuration_args.projects, Project name, arg
+		General: =>
+			for k,v in pairs @
+				configuration_args[k] = v
+	}
+
+	for k, v in pairs _G
+		configuration_environment[k] = v
+
+	setfenv chunk, configuration_environment
+
+	chunk!
+
+	Configuration configuration_args
 
 cliParser = with argparse arg[0], "Test results aggregator."
 	with \command "show", "List the registered projects and test results."
@@ -58,7 +82,7 @@ cliParser = with argparse arg[0], "Test results aggregator."
 			\count "0-1"
 
 	with \command "html", "Generates a set of HTML pages."
-		\option "-o --output", "Output directory", "output/"
+		\option "-o --output", "Output directory", "output"
 
 	with \command "add", "Registers a new set of test results to a given project."
 		\argument "project", "Name of the project whose tests were run."

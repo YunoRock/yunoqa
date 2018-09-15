@@ -7,9 +7,8 @@ tap = require "yunoqa.tap"
 TestsResults = require "yunoqa.tests_results"
 
 class
-	new: (arg) =>
-		-- FIXME: Make that an error.
-		@name = arg.name or "(unnamed project)"
+	new: (name, arg) =>
+		@name = name
 
 		-- FIXME: Compatibility
 		@project = @name
@@ -17,11 +16,22 @@ class
 		@results = {}
 		@environments = {}
 
-		@template = if arg.template
-			moonscript.loadfile(arg.template)!
+		@template = do
+			template = arg.template
+
+			switch type template
+				when "string"
+					moonscript.loadfile(template)!
+				when "function"
+					template
 
 	importResults: (configuration) =>
-		for entry in lfs.dir "#{configuration.resultsDirectory}/#{@name}"
+		resultsDirectory = "#{configuration.resultsDirectory}/#{@name}"
+		unless lfs.attributes resultsDirectory
+			-- FIXME: We should probably check it’s a directory too.
+			return nil, "results directory does not exist"
+
+		for entry in lfs.dir resultsDirectory
 			if entry == "." or entry == ".."
 				continue
 
