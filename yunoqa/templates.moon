@@ -147,47 +147,49 @@ _M.singleResultsPage = (configuration, results, project) ->
 				else
 					"is-warning"
 
-				div class: "message #{colorClass}", ->
-					div class: "message-body", ->
-						div class: "tags has-addons", ->
-							div class: "tag is-big is-primary", "Duration"
-							div class: "tag is-big is-info", ->
-								if results.duration
-									text string.format("%.3f", results.duration * 1000)
-									text " ms"
-								else
-									text "unknown"
+				div class: "columns is-centered", ->
+					div class: "column is-8", ->
+						div class: "message #{colorClass}", ->
+							div class: "message-body", ->
+								div class: "tags has-addons", ->
+									div class: "tag is-big is-primary", "Duration"
+									div class: "tag is-big is-info", ->
+										if results.duration
+											text string.format("%.3f", results.duration * 1000)
+											text " ms"
+										else
+											text "unknown"
 
-						div class: "tags has-addons", ->
-							div class: "tag is-big is-primary", "Tests"
-							div class: "tag is-big is-info",  tostring #results
+								div class: "tags has-addons", ->
+									div class: "tag is-big is-primary", "Tests"
+									div class: "tag is-big is-info",  tostring #results
 
-						div class: "tags has-addons", ->
-							statusString, colorClass = if results.summary["not ok"] == 0
-								"all passed", "is-success"
-							else
-								"errors", "is-danger"
+								div class: "tags has-addons", ->
+									statusString, colorClass = if results.summary["not ok"] == 0
+										"all passed", "is-success"
+									else
+										"errors", "is-danger"
 
-							div class: "tag is-big is-primary", "Status"
-							div class: "tag is-big #{colorClass}", statusString
+									div class: "tag is-big is-primary", "Status"
+									div class: "tag is-big #{colorClass}", statusString
 
-						div class: "tags has-addons", ->
-							all = results.summary.ok + results.summary["not ok"]
-							rate = 100 * results.summary.ok / all
+								div class: "tags has-addons", ->
+									all = results.summary.ok + results.summary["not ok"]
+									rate = 100 * results.summary.ok / all
 
-							colorClass = if rate < 30
-								"is-danger"
-							elseif rate < 99
-								"is-warning"
-							else
-								"is-success"
+									colorClass = if rate < 30
+										"is-danger"
+									elseif rate < 99
+										"is-warning"
+									else
+										"is-success"
 
-							div class: "tag is-big is-primary", ->
-								text "Success rate"
+									div class: "tag is-big is-primary", ->
+										text "Success rate"
 
-							div class: "tag is-big #{colorClass}", ->
-								text string.format "%.1f", rate
-								text " %"
+									div class: "tag is-big #{colorClass}", ->
+										text string.format "%.1f", rate
+										text " %"
 		br!
 		div class: "container", ->
 			div class: "columns is-centered", ->
@@ -203,18 +205,24 @@ _M.projectResultsPage = (configuration, project) ->
 		div class: "columns is-centered", ->
 			div class: "column is-8", ->
 				h3 class: "title is-3", "Per-environment summary"
-				ul ->
+				element "table", class: "table is-striped is-fullwidth", ->
 					for environment in *project.environments
-						li class: "columns", ->
-							div class: "column",
-								environment.name
+						latestTest = environment[1]
+						href = "#{project.project}-#{latestTest.date\gsub ":", "-"}-#{latestTest.environmentName}-#{latestTest.revisionName}.xhtml", ->
 
-							latestTest = environment[1]
-							div class: "column is-3 has-text-center", ->
-								if latestTest.summary["not ok"] != 0
-									span class: "tag is-medium is-danger", "not ok"
-								else
-									span class: "tag is-medium is-success", "ok"
+						tr class: "tr", ->
+							td class: "td", ->
+								a {:href, class: "is-block"}, ->
+									code environment.name
+									text " - "
+									code latestTest.revisionName
+
+							td class: "td has-text-right", ->
+								a {:href, class: "is-block"}, ->
+									if latestTest.summary["not ok"] != 0
+										span class: "tag is-medium is-danger", "not ok"
+									else
+										span class: "tag is-medium is-success", "ok"
 
 				h3 class: "title is-3", "Latest results registered"
 				ul ->
@@ -249,10 +257,11 @@ _M.projectResultsPage = (configuration, project) ->
 												text results.date
 
 									div class: "column is-4", ->
-										span class: "tag is-medium is-success", results.summary["ok"]
-										span class: "tag is-medium is-danger", results.summary["not ok"]
-										span class: "tag is-medium is-primary", results.summary["skip"]
-										span class: "tag is-medium is-warning", results.summary["todo"]
+										div class: "is-pulled-right", ->
+											span class: "tag is-medium is-success", results.summary["ok"]
+											span class: "tag is-medium is-danger", results.summary["not ok"]
+											span class: "tag is-medium is-primary", results.summary["skip"]
+											span class: "tag is-medium is-warning", results.summary["todo"]
 
 _M.indexPage = (configuration) ->
 	_M.basePage configuration, ->
