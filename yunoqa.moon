@@ -53,6 +53,7 @@ cliParser = with argparse arg[0], "Test results aggregator."
 	with \command "show", "List the registered projects and test results."
 		with \option "-p --project", "Filter shown results by project."
 			\count "0-1"
+		\flag "-v --verbose", "Show details of test results."
 
 	with \command "html", "Generates a set of HTML pages."
 		\option "-o --output", "Output directory", "output"
@@ -129,10 +130,44 @@ elseif args.show
 
 	for project in *projects
 		for results in *project.results
-			io.write colors.bright_white "#{project.name}, ",
+			headerColor = if results.summary["not ok"] > 0
+				colors.bright_red
+			else
+				colors.bright_white
+
+			io.write headerColor "#{project.name}, ",
 				"rev:#{results.revisionName}, ",
 				"env:#{results.environmentName}, ",
 				"#{results.date}\n"
+
+			if args.verbose
+				for test in *results
+					color = switch test.status
+						when "ok"
+							colors.green
+						when "not ok"
+							colors.red
+						when "skip"
+							colors.yellow
+						else
+							colors.cyan
+
+					io.write color (
+						"#{string.format "%6s", test.status}" ..
+						" #{string.format "%-3s", test.number}"
+					)
+
+					color = switch test.status
+						when "ok"
+							colors.white
+						when "not ok"
+							colors.red
+						when "skip"
+							colors.yellow
+						else
+							colors.cyan
+
+					io.write " - #{color test.description}\n"
 
 			io.write colors.bright_green "#{results.summary.ok} ok"
 			io.write " - "
